@@ -114,8 +114,9 @@
             width: 100%;
             height: 40%; /* 40% chiều cao trên mobile */
             background-color: #78350F; /* Màu gỗ tối (yellow-800) */
-            border-left: 8px solid #451A03;
-            box-shadow: -10px 0 20px rgba(0,0,0,0.3) inset;
+            border-top: 8px solid #451A03; /* Đổi viền sang top */
+            border-left: none; /* Xóa viền trái */
+            box-shadow: 0 -10px 20px rgba(0,0,0,0.3) inset; /* Đổi bóng lên trên */
             /* CẬP NHẬT: Cho phép cuộn y */
             overflow-y: auto;
             padding: 1rem; /* p-4 */
@@ -127,6 +128,9 @@
              #tools-b {
                 width: 20%; /* w-1/5 */
                 height: 100%; /* h-full */
+                border-left: 8px solid #451A03; /* Trả lại viền trái */
+                border-top: none; /* Xóa viền trên */
+                box-shadow: -10px 0 20px rgba(0,0,0,0.3) inset; /* Trả lại bóng bên trái */
              }
         }
 
@@ -419,7 +423,7 @@
         }
          /* THÊM MỚI: Loading indicator */
         .loader {
-            border: 4px solid #f3f3ff; /* Light grey */
+            border: 4px solid #f3f3f3; /* Light grey */
             border-top: 4px solid #3498db; /* Blue */
             border-radius: 50%;
             width: 20px;
@@ -784,16 +788,14 @@
                 aiExplanationElement.textContent = message;
              }
         }
+        
+        // SỬA LỖI TOUCH: Chuẩn hóa sự kiện (trả về clientX/Y cho cả chuột và chạm)
+        function getEvent(evt) {
+            return evt.touches ? evt.touches[0] : evt;
+        }
 
         function generateUUID() {
             return 'item-' + Date.now() + '-' + Math.random().toString(16).slice(2);
-        }
-
-        // SỬA: Chuẩn hóa sự kiện (chuột và chạm)
-        function getEvent(e) {
-            // Nếu là sự kiện chạm (e.touches tồn tại và có phần tử), trả về lần chạm đầu tiên
-            // Ngược lại, trả về sự kiện chuột
-            return e.touches && e.touches.length ? e.touches[0] : e;
         }
 
         // Lấy tọa độ chuột tương đối với dropZone
@@ -1931,14 +1933,17 @@
 
 
 
-        // === LOGIC TƯƠNG TÁC CHÍNH ===
+        // === LOGIC TƯƠNG TÁC CHÍNH (SỬA LỖI TOUCH) ===
 
-        // 1. Nhấn chuột/Chạm xuống trên HỘP CÔNG CỤ (Màn hình B)
         function handleToolboxStart(e) {
-            const toolItem = e.target.closest('.tool-item');
-            if (!toolItem || toolItem.classList.contains('tool-prohibited')) return; // THÊM: Không cho kéo nếu bị cấm
+            // SỬA LỖI TOUCH: Ngăn cuộn trang khi kéo tool
+            e.preventDefault(); 
+            
+            const event = getEvent(e);
+            const toolItem = event.target.closest('.tool-item');
+            
+            if (!toolItem || toolItem.classList.contains('tool-prohibited')) return; 
 
-            // e.preventDefault(); // Giữ e.preventDefault() để ngăn hành vi mặc định
             isPotentialDrag = true; // Bắt đầu nhấn chuột
             
             // KIỂM TRA CHẾ ĐỘ NỐI DÂY (CLICK)
@@ -1966,7 +1971,6 @@
                 draggedItemCopy.classList.add('dragging', 'cloned-item');
                 draggedItemCopy.classList.remove('tool-item', 'tool-prohibited'); // Xóa class cấm khỏi bản sao
 
-                const event = getEvent(e); // SỬ DỤNG HELPER
                 const rect = toolItem.getBoundingClientRect();
                 offsetX = event.clientX - rect.left;
                 offsetY = event.clientY - rect.top;
@@ -1978,39 +1982,12 @@
             }
         }
         
-        // 2. NHẤP CHUỘT (CLICK) TRÊN MÀN HÌNH A (ĐỂ BẬT/TẮT CÔNG TẮC)
-        dropZone.addEventListener('click', (e) => {
-            // SỬA LỖI CLICK: Chỉ xử lý click nếu KHÔNG phải là đang kéo/vừa kéo xong
-            if (isDragging || isWiringMode || isPotentialDrag) {
-                // isPotentialDrag kiểm tra nếu mouseup xảy ra ngay sau mousedown (là 1 cú click)
-                // nhưng nếu nó là 1 cú kéo (isDragging) thì bỏ qua
-                if(isDragging) return;
-            }
-            
-            const targetItem = e.target.closest('.cloned-item');
-            if (targetItem && targetItem.dataset.tool === 'switch') {
-                // Bật/tắt trạng thái
-                targetItem.classList.toggle('switch-on');
-                // THÊM MỚI: AI Bot giải thích
-                const explanation = targetItem.classList.contains('switch-on') ? "Công tắc đã được bật." : "Công tắc đã được tắt.";
-                 updateAIExplanation(explanation);
-                 callTTSAPI(explanation); // Gọi TTS
-                
-                // Cập nhật toàn bộ mô phỏng (chủ yếu là đèn)
-                updateAllSimulationStates("switch"); // Thêm context
-                
-                saveState(); // Lưu trạng thái sau khi click
-                
-                // Thêm gợi ý
-                setTimeout(provideNextStepGuidance, 1000); // Thêm delay
-            }
-        });
-
-
-        // 3. Nhấn chuột/Chạm xuống trên MÀN HÌNH A (ĐỂ KÉO HOẶC NỐI DÂY)
         function handleDropZoneStart(e) {
+             // SỬA LỖI TOUCH: Ngăn cuộn trang
+             
             isPotentialDrag = true; // Bắt đầu nhấn chuột
-            const targetItem = e.target.closest('.cloned-item');
+            const event = getEvent(e);
+            const targetItem = event.target.closest('.cloned-item');
 
             // TRƯỜNG HỢP 1: ĐANG Ở CHẾ ĐỘ NỐI DÂY
             if (isWiringMode) {
@@ -2039,7 +2016,7 @@
                 // SỬA LỖI CLICK: Chỉ preventDefault NẾU KHÔNG PHẢI LÀ CÔNG TẮC
                 // để cho phép sự kiện 'click' hoạt động
                 if (targetItem.dataset.tool !== 'switch') {
-                    e.preventDefault(); // Ngăn chặn text selection
+                    e.preventDefault(); // Ngăn chặn text selection VÀ cuộn trang
                 }
                 
                 draggedItem = targetItem;
@@ -2047,33 +2024,31 @@
                 // 'dragging' sẽ được thêm trong 'mousemove' nếu chuột thực sự di chuyển
                 draggedItem.style.zIndex = 1001; 
                 
-                const event = getEvent(e); // SỬ DỤNG HELPER
                 const rect = draggedItem.getBoundingClientRect();
                 offsetX = event.clientX - rect.left;
                 offsetY = event.clientY - rect.top;
             }
         }
 
-        // 4. DI CHUYỂN CHUỘT/CHẠM (Global)
         function handleDragMove(e) {
-            // QUAN TRỌNG: Ngăn cuộn trang trên mobile khi đang kéo
-            if (isDragging) {
+            // SỬA LỖI TOUCH: Ngăn cuộn trang NẾU đang kéo
+            if (isDragging || isPotentialDrag) {
                  e.preventDefault();
             }
             
+            const event = getEvent(e);
+            
             // SỬA LỖI CLICK: Nếu đang nhấn chuột (potentialDrag), và chuột di chuyển -> xác nhận là KÉO
-            // Thêm e.touches để kích hoạt kéo ngay lập tức trên mobile
             if (isPotentialDrag && (draggedItem || draggedItemCopy)) {
-                if (Math.abs(e.movementX) > 1 || Math.abs(e.movementY) > 1 || e.touches) { 
-                     isDragging = true; 
-                    // Thêm class dragging khi bắt đầu kéo
-                    if(draggedItem && !draggedItem.classList.contains('dragging')) draggedItem.classList.add('dragging');
-                    if(draggedItemCopy && !draggedItemCopy.classList.contains('dragging')) draggedItemCopy.classList.add('dragging'); // Thêm cho clone
-                }
+                // Chỉ đặt isDragging nếu thực sự di chuyển một khoảng nhỏ
+                // SỬA LỖI TOUCH: e.movementX không tồn tại trên touch, dùng isPotentialDrag là đủ
+                 isDragging = true; 
+                // Thêm class dragging khi bắt đầu kéo
+                if(draggedItem && !draggedItem.classList.contains('dragging')) draggedItem.classList.add('dragging');
+                if(draggedItemCopy && !draggedItemCopy.classList.contains('dragging')) draggedItemCopy.classList.add('dragging'); // Thêm cho clone
             }
 
-            const event = getEvent(e); // SỬ DỤNG HELPER
-            const mousePos = getMousePos(e); // getMousePos đã được cập nhật
+            const mousePos = getMousePos(event);
 
             // A. Đang kéo (di chuyển) item
             if (draggedItem && isDragging) {
@@ -2108,29 +2083,28 @@
                 // Vẽ đường cong mượt theo vị trí chuột (cho mục đích xem trước)
                 tempWire.setAttribute('d', `M ${startPos.x} ${startPos.y} Q ${startPos.x} ${mousePos.y} ${mousePos.x} ${mousePos.y}`);
             }
-        });
-
-        // 5. NHẢ CHUỘT/NHẢ CHẠM (Global)
+        }
+        
         function handleDragEnd(e) {
             let stateChanged = false; // Cờ theo dõi
             let actionContext = null; // Theo dõi hành động
             
-            // SỬA: Lấy sự kiện kết thúc (chuột hoặc chạm)
-            const endEvent = e.changedTouches ? e.changedTouches[0] : e;
-
+            // SỬA LỖI TOUCH: Lấy clientX/Y từ "changedTouches" cho "touchend"
+             const event = e.changedTouches ? e.changedTouches[0] : e;
+            
             const dropZoneRect = dropZone.getBoundingClientRect();
             const toolBoxRect = toolBox.getBoundingClientRect();
 
-            const isOverDropZone = endEvent.clientX >= dropZoneRect.left && endEvent.clientX <= dropZoneRect.right &&
-                                 endEvent.clientY >= dropZoneRect.top && endEvent.clientY <= dropZoneRect.bottom;
+            const isOverDropZone = event.clientX >= dropZoneRect.left && event.clientX <= dropZoneRect.right &&
+                                 event.clientY >= dropZoneRect.top && event.clientY <= dropZoneRect.bottom;
             
-            const isOverToolBox = endEvent.clientX >= toolBoxRect.left && endEvent.clientX <= toolBoxRect.right &&
-                                endEvent.clientY >= toolBoxRect.top && endEvent.clientY <= toolBoxRect.bottom;
+            const isOverToolBox = event.clientX >= toolBoxRect.left && event.clientX <= toolBoxRect.right &&
+                                event.clientY >= toolBoxRect.top && event.clientY <= toolBoxRect.bottom;
 
             // TRƯỜNG HỢP 1: KẾT THÚC NỐI DÂY
             if (isWiringMode && wiringStartItem) {
-                 // SỬA: Lấy mục tiêu từ tọa độ chạm
-                const endTarget = document.elementFromPoint(endEvent.clientX, endEvent.clientY);
+                // SỬA LỖI TOUCH: Dùng elementFromPoint với tọa độ touchend
+                const endTarget = document.elementFromPoint(event.clientX, event.clientY);
                 const endItem = endTarget ? endTarget.closest('.cloned-item') : null;
                 
                 const startType = wiringStartItem.dataset.tool;
@@ -2179,12 +2153,7 @@
                 let explanation = "";
                 
                 if (isOverDropZone && isDragging) { // Chỉ thả nếu thực sự kéo
-                    // SỬA: Lấy vị trí chuột/chạm bằng tọa độ cuối cùng
-                    const rect = dropZone.getBoundingClientRect();
-                    const mousePos = {
-                        x: endEvent.clientX - rect.left,
-                        y: endEvent.clientY - rect.top
-                    };
+                    const mousePos = getMousePos(event); // SỬA: Dùng event
                     
                     let x = mousePos.x - offsetX;
                     let y = mousePos.y - offsetY;
@@ -2311,10 +2280,25 @@
                 saveState();
                  // Chỉ đưa ra gợi ý nếu hành động không phải là "move"
                 if (actionContext !== "move") {
-                     setTimeout(provideNextStepGuidance, 1500); // Tăng delay để chờ TTS hành động
+                     setTimeout(provideNextStepGuidance, 1500); 
                 }
             }
-        });
+        }
+        
+        // SỬA LỖI: Thêm các hàm xử lý sự kiện Touch VÀ Mouse
+        
+        // Mouse Events
+        toolBox.addEventListener('mousedown', handleToolboxStart);
+        dropZone.addEventListener('mousedown', handleDropZoneStart);
+        document.addEventListener('mousemove', handleDragMove);
+        document.addEventListener('mouseup', handleDragEnd);
+
+        // Touch Events
+        toolBox.addEventListener('touchstart', handleToolboxStart, { passive: false });
+        dropZone.addEventListener('touchstart', handleDropZoneStart, { passive: false });
+        document.addEventListener('touchmove', handleDragMove, { passive: false });
+        document.addEventListener('touchend', handleDragEnd);
+
         
         // CẬP NHẬT: Xử lý sự kiện nhấn nút Gửi của AI Bot (Gọi Gemini)
         aiSendButton.addEventListener('click', () => {
@@ -2334,20 +2318,6 @@
         // THÊM MỚI: Listeners cho Reset và Undo
         resetButton.addEventListener('click', resetSimulation);
         undoButton.addEventListener('click', undo);
-
-        // === THÊM MỚI: GẮN EVENT HANDLERS ===
-        // Chuột
-        toolBox.addEventListener('mousedown', handleToolboxStart);
-        dropZone.addEventListener('mousedown', handleDropZoneStart);
-        document.addEventListener('mousemove', handleDragMove);
-        document.addEventListener('mouseup', handleDragEnd);
-
-        // Chạm (Touch)
-        // { passive: false } là quan trọng để cho phép e.preventDefault() và ngăn cuộn trang
-        toolBox.addEventListener('touchstart', handleToolboxStart, { passive: false });
-        dropZone.addEventListener('touchstart', handleDropZoneStart, { passive: false });
-        document.addEventListener('touchmove', handleDragMove, { passive: false });
-        document.addEventListener('touchend', handleDragEnd);
 
         
         // KHỞI CHẠY MÔ PHỎNG LẦN ĐẦU

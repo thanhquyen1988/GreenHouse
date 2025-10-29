@@ -1681,7 +1681,7 @@
          * @param {string} userQuery Câu hỏi của người dùng
          */
         async function callGeminiAPI(userQuery) {
-            const apiKey = "AIzaSyA4mR7kiPbVUyJF_nSktX_-U9e9CubFO88"; // API key sẽ được cung cấp bởi môi trường Canvas
+            const apiKey = "AIzaSyBA6J8sP-XtkckhFpPK5mI8h7IyDegwnWE"; // API key sẽ được cung cấp bởi môi trường Canvas
             const apiUrlText = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
             // Thêm ngữ cảnh về game vào prompt
@@ -1745,7 +1745,7 @@
                  console.warn("TTS called with empty text.");
                  return;
              }
-            const apiKey = "AIzaSyA4mR7kiPbVUyJF_nSktX_-U9e9CubFO88"; // API key sẽ được cung cấp bởi môi trường Canvas
+            const apiKey = "AIzaSyBA6J8sP-XtkckhFpPK5mI8h7IyDegwnWE"; // API key sẽ được cung cấp bởi môi trường Canvas
             const apiUrlTTS = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
 
              // Cố gắng dừng phát âm thanh hiện tại nếu có
@@ -2325,4 +2325,5 @@
     </script>
 </body>
 </html>
+
 

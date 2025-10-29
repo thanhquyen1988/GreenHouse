@@ -18,15 +18,31 @@
             display: flex;
             height: 100vh;
             width: 100vw;
+            /* THÊM MỚI: Bố cục cột cho mobile, bố cục hàng cho desktop */
+            flex-direction: column;
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+             #game-container {
+                flex-direction: row;
+             }
         }
 
         /* Màn hình A (Khu vực mô hình) */
         #model-a {
+            /* CẬP NHẬT: Kích thước cho mobile và desktop */
+            width: 100%;
+            height: 60%; /* 60% chiều cao trên mobile */
             background-color: #6B7280; /* Gray-500 (Xám đậm mặc định - Khi chưa có mặt trời) */
             background-size: cover;
             background-position: center;
             position: relative; /* Quan trọng để định vị các item con */
             transition: background-color 0.5s ease;
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+             #model-a {
+                width: 80%; /* w-4/5 */
+                height: 100%; /* h-full */
+             }
         }
         
         /* CẬP NHẬT: Nền xanh lá khi có mặt trời và không bị che */
@@ -94,9 +110,24 @@
         
         /* Màn hình B (Hộp công cụ) */
         #tools-b {
+            /* CẬP NHẬT: Kích thước cho mobile và desktop */
+            width: 100%;
+            height: 40%; /* 40% chiều cao trên mobile */
             background-color: #78350F; /* Màu gỗ tối (yellow-800) */
-            border-left: 8px solid #451A03; /* Viền đậm hơn */
+            border-left: 8px solid #451A03;
             box-shadow: -10px 0 20px rgba(0,0,0,0.3) inset;
+            /* CẬP NHẬT: Cho phép cuộn y */
+            overflow-y: auto;
+            padding: 1rem; /* p-4 */
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr)); /* grid-cols-2 */
+            gap: 1rem; /* gap-4 */
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+             #tools-b {
+                width: 20%; /* w-1/5 */
+                height: 100%; /* h-full */
+             }
         }
 
         /* Ô chứa công cụ */
@@ -331,8 +362,8 @@
         /* CẬP NHẬT: AI Bot CSS (Di chuyển sang phải) */
         #ai-bot {
             position: absolute;
-            bottom: 20px;
-            right: 20px; /* Đổi sang phải */
+            bottom: 1rem; /* 20px */
+            right: 1rem; /* 20px */
             left: auto; /* Xóa vị trí bên trái */
             background-color: white;
             border-radius: 10px;
@@ -341,9 +372,18 @@
             display: flex;
             flex-wrap: wrap; /* Cho phép xuống dòng */
             align-items: center;
-            max-width: 350px; /* Tăng chiều rộng */
+            /* CẬP NHẬT: Kích thước cho mobile và desktop */
+            max-width: 280px;
+            padding: 8px;
             z-index: 50; /* Nằm trên các item khác */
         }
+        @media (min-width: 768px) { /* md breakpoint */
+            #ai-bot {
+                max-width: 350px; /* Tăng chiều rộng */
+                padding: 10px 15px;
+            }
+        }
+
         #ai-bot img {
             width: 40px;
             height: 40px;
@@ -351,15 +391,31 @@
             border-radius: 50%;
             object-fit: cover; /* Đảm bảo ảnh vừa vặn */
             flex-shrink: 0; /* Không co lại */
+            /* CẬP NHẬT: Ẩn avatar trên mobile */
+            display: none;
         }
+        @media (min-width: 768px) { /* md breakpoint */
+            #ai-bot img {
+                display: block;
+            }
+        }
+
         #ai-explanation {
-            font-size: 14px;
+            /* CẬP NHẬT: Kích thước chữ và layout cho mobile */
+            font-size: 13px;
             color: #374151; /* Gray-700 */
             margin: 0;
             flex-grow: 1; /* Chiếm hết không gian còn lại */
             margin-bottom: 8px; /* Khoảng cách với ô input */
-            width: calc(100% - 50px); /* Chiếm gần hết hàng trên */
-            min-height: 40px; /* Đảm bảo chiều cao tối thiểu */
+            width: 100%; /* Chiếm hết hàng trên trên mobile */
+            min-height: 30px; /* Đảm bảo chiều cao tối thiểu */
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            #ai-explanation {
+                font-size: 14px;
+                width: calc(100% - 50px); /* Chiếm gần hết hàng trên */
+                min-height: 40px;
+            }
         }
          /* THÊM MỚI: Loading indicator */
         .loader {
@@ -381,8 +437,14 @@
              display: flex;
              width: 100%;
              align-items: center;
-             margin-left: 50px; /* Căn lề với text */
+             /* CẬP NHẬT: Căn lề cho mobile */
+             margin-left: 0;
         }
+         @media (min-width: 768px) { /* md breakpoint */
+            #ai-input-row {
+                 margin-left: 50px; /* Căn lề với text */
+            }
+         }
         #ai-question {
             /* width: calc(100% - 70px); Chiều rộng trừ đi nút Gửi */
             flex-grow: 1; /* Chiếm không gian còn lại */
@@ -423,30 +485,61 @@
             font-weight: bold;
         }
         .game-title {
-            font-size: 2.2rem; /* 1.1rem * 2 = 35.2px */
-            line-height: 2.5rem; /* Điều chỉnh line height */
+            /* CẬP NHẬT: Kích thước chữ cho mobile */
+            font-size: 1.2rem; /* 1.1rem * 2 = 35.2px */
+            line-height: 1.5rem; /* Điều chỉnh line height */
         }
+        @media (min-width: 768px) { /* md breakpoint */
+            .game-title {
+                font-size: 2.2rem; 
+                line-height: 2.5rem;
+            }
+        }
+
         .game-main-title {
-            font-size: 3.75rem; /* 1.875rem * 2 = 60px */
-            line-height: 4rem; /* Điều chỉnh line height */
+             /* CẬP NHẬT: Kích thước chữ cho mobile */
+            font-size: 2rem; 
+            line-height: 2.2rem;
             color: #EF4444; /* Red-500 */
             margin-top: 5px;
         }
+         @media (min-width: 768px) { /* md breakpoint */
+            .game-main-title {
+                font-size: 3.75rem; 
+                line-height: 4rem;
+            }
+         }
+        
         #author-credit-container {
             position: absolute;
             bottom: 1rem; /* 16px */
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
+            /* CẬP NHẬT: Vị trí cho mobile và desktop */
+            left: 1rem; /* 16px on mobile */
+            transform: translateX(0); /* Reset transform on mobile */
+            text-align: left; /* Align left on mobile */
             pointer-events: none; /* Cho phép click xuyên qua */
             z-index: 30; /* Nằm trên các item khác (ngoại trừ Bot) */
         }
+         @media (min-width: 768px) { /* md breakpoint */
+            #author-credit-container {
+                left: 50%;
+                transform: translateX(-50%);
+                text-align: center;
+            }
+         }
+
         .author-credit {
-            font-size: 1.75rem; /* 0.875rem * 2 = 28px */
-            font-style: italic; /* Giữ in nghiêng */
+             /* CẬP NHẬT: Kích thước chữ cho mobile */
+            font-size: 1rem; 
+            font-style: italic; /* Thêm lại in nghiêng */
             color: #2563EB; /* Đổi sang màu xanh dương (Blue-600) */
-            font-weight: bold; /* ĐỔI SANG IN ĐẬM */
+            font-weight: bold; /* Giữ in đậm */
         }
+        @media (min-width: 768px) { /* md breakpoint */
+            .author-credit {
+                font-size: 1.75rem;
+            }
+         }
 
 
     </style>
@@ -464,7 +557,7 @@
             <div id="game-title-container">
                 <p class="game-title">Ủy ban nhân dân xã Tân Thành Bình</p>
                 <p class="game-title">Trường Tiểu học Tân Thành Bình 2</p>
-                <p class="game-main-title">GREEN HOUSE</p>
+                <p class="game-main-title">GREEN ENERGY HOUSE</p>
             </div>
             
             <!-- THÊM MỚI: Tên tác giả -->
@@ -2232,6 +2325,4 @@
     </script>
 </body>
 </html>
-
-
 

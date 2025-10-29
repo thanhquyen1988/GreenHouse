@@ -419,7 +419,7 @@
         }
          /* THÊM MỚI: Loading indicator */
         .loader {
-            border: 4px solid #f3f3f3; /* Light grey */
+            border: 4px solid #f3f3ff; /* Light grey */
             border-top: 4px solid #3498db; /* Blue */
             border-radius: 50%;
             width: 20px;
@@ -789,12 +789,21 @@
             return 'item-' + Date.now() + '-' + Math.random().toString(16).slice(2);
         }
 
+        // SỬA: Chuẩn hóa sự kiện (chuột và chạm)
+        function getEvent(e) {
+            // Nếu là sự kiện chạm (e.touches tồn tại và có phần tử), trả về lần chạm đầu tiên
+            // Ngược lại, trả về sự kiện chuột
+            return e.touches && e.touches.length ? e.touches[0] : e;
+        }
+
         // Lấy tọa độ chuột tương đối với dropZone
         function getMousePos(evt) {
+            // SỬA: Chuẩn hóa sự kiện chuột và chạm
+            const event = getEvent(evt); 
             const rect = dropZone.getBoundingClientRect();
             return {
-                x: evt.clientX - rect.left,
-                y: evt.clientY - rect.top
+                x: event.clientX - rect.left,
+                y: event.clientY - rect.top
             };
         }
         
@@ -1681,7 +1690,7 @@
          * @param {string} userQuery Câu hỏi của người dùng
          */
         async function callGeminiAPI(userQuery) {
-            const apiKey = "AIzaSyBA6J8sP-XtkckhFpPK5mI8h7IyDegwnWE"; // API key sẽ được cung cấp bởi môi trường Canvas
+            const apiKey = ""; // API key sẽ được cung cấp bởi môi trường Canvas
             const apiUrlText = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
             // Thêm ngữ cảnh về game vào prompt
@@ -1745,7 +1754,7 @@
                  console.warn("TTS called with empty text.");
                  return;
              }
-            const apiKey = "AIzaSyBA6J8sP-XtkckhFpPK5mI8h7IyDegwnWE"; // API key sẽ được cung cấp bởi môi trường Canvas
+            const apiKey = ""; // API key sẽ được cung cấp bởi môi trường Canvas
             const apiUrlTTS = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
 
              // Cố gắng dừng phát âm thanh hiện tại nếu có
@@ -1924,12 +1933,12 @@
 
         // === LOGIC TƯƠNG TÁC CHÍNH ===
 
-        // 1. Nhấn chuột xuống trên HỘP CÔNG CỤ (Màn hình B)
-        toolBox.addEventListener('mousedown', (e) => {
+        // 1. Nhấn chuột/Chạm xuống trên HỘP CÔNG CỤ (Màn hình B)
+        function handleToolboxStart(e) {
             const toolItem = e.target.closest('.tool-item');
             if (!toolItem || toolItem.classList.contains('tool-prohibited')) return; // THÊM: Không cho kéo nếu bị cấm
 
-            e.preventDefault(); 
+            // e.preventDefault(); // Giữ e.preventDefault() để ngăn hành vi mặc định
             isPotentialDrag = true; // Bắt đầu nhấn chuột
             
             // KIỂM TRA CHẾ ĐỘ NỐI DÂY (CLICK)
@@ -1957,16 +1966,17 @@
                 draggedItemCopy.classList.add('dragging', 'cloned-item');
                 draggedItemCopy.classList.remove('tool-item', 'tool-prohibited'); // Xóa class cấm khỏi bản sao
 
+                const event = getEvent(e); // SỬ DỤNG HELPER
                 const rect = toolItem.getBoundingClientRect();
-                offsetX = e.clientX - rect.left;
-                offsetY = e.clientY - rect.top;
+                offsetX = event.clientX - rect.left;
+                offsetY = event.clientY - rect.top;
 
-                draggedItemCopy.style.left = `${e.clientX - offsetX}px`;
-                draggedItemCopy.style.top = `${e.clientY - offsetY}px`;
+                draggedItemCopy.style.left = `${event.clientX - offsetX}px`;
+                draggedItemCopy.style.top = `${event.clientY - offsetY}px`;
 
                 document.body.appendChild(draggedItemCopy);
             }
-        });
+        }
         
         // 2. NHẤP CHUỘT (CLICK) TRÊN MÀN HÌNH A (ĐỂ BẬT/TẮT CÔNG TẮC)
         dropZone.addEventListener('click', (e) => {
@@ -1997,8 +2007,8 @@
         });
 
 
-        // 3. Nhấn chuột xuống trên MÀN HÌNH A (ĐỂ KÉO HOẶC NỐI DÂY)
-        dropZone.addEventListener('mousedown', (e) => {
+        // 3. Nhấn chuột/Chạm xuống trên MÀN HÌNH A (ĐỂ KÉO HOẶC NỐI DÂY)
+        function handleDropZoneStart(e) {
             isPotentialDrag = true; // Bắt đầu nhấn chuột
             const targetItem = e.target.closest('.cloned-item');
 
@@ -2037,20 +2047,24 @@
                 // 'dragging' sẽ được thêm trong 'mousemove' nếu chuột thực sự di chuyển
                 draggedItem.style.zIndex = 1001; 
                 
+                const event = getEvent(e); // SỬ DỤNG HELPER
                 const rect = draggedItem.getBoundingClientRect();
-                offsetX = e.clientX - rect.left;
-                offsetY = e.clientY - rect.top;
+                offsetX = event.clientX - rect.left;
+                offsetY = event.clientY - rect.top;
             }
-        });
+        }
 
-        // 4. DI CHUYỂN CHUỘT (Global)
-        document.addEventListener('mousemove', (e) => {
-            e.preventDefault();
+        // 4. DI CHUYỂN CHUỘT/CHẠM (Global)
+        function handleDragMove(e) {
+            // QUAN TRỌNG: Ngăn cuộn trang trên mobile khi đang kéo
+            if (isDragging) {
+                 e.preventDefault();
+            }
             
             // SỬA LỖI CLICK: Nếu đang nhấn chuột (potentialDrag), và chuột di chuyển -> xác nhận là KÉO
+            // Thêm e.touches để kích hoạt kéo ngay lập tức trên mobile
             if (isPotentialDrag && (draggedItem || draggedItemCopy)) {
-                // Chỉ đặt isDragging nếu thực sự di chuyển một khoảng nhỏ
-                if (Math.abs(e.movementX) > 1 || Math.abs(e.movementY) > 1) {
+                if (Math.abs(e.movementX) > 1 || Math.abs(e.movementY) > 1 || e.touches) { 
                      isDragging = true; 
                     // Thêm class dragging khi bắt đầu kéo
                     if(draggedItem && !draggedItem.classList.contains('dragging')) draggedItem.classList.add('dragging');
@@ -2058,7 +2072,8 @@
                 }
             }
 
-            const mousePos = getMousePos(e);
+            const event = getEvent(e); // SỬ DỤNG HELPER
+            const mousePos = getMousePos(e); // getMousePos đã được cập nhật
 
             // A. Đang kéo (di chuyển) item
             if (draggedItem && isDragging) {
@@ -2084,8 +2099,8 @@
             }
             // B. Đang kéo (sao chép) item mới
             else if (draggedItemCopy && isDragging) {
-                draggedItemCopy.style.left = `${e.clientX - offsetX}px`;
-                draggedItemCopy.style.top = `${e.clientY - offsetY}px`;
+                draggedItemCopy.style.left = `${event.clientX - offsetX}px`;
+                draggedItemCopy.style.top = `${event.clientY - offsetY}px`;
             }
             // C. Đang kéo (nối dây)
             else if (wiringStartItem && tempWire) {
@@ -2095,23 +2110,29 @@
             }
         });
 
-        // 5. NHẢ CHUỘT (Global)
-        document.addEventListener('mouseup', (e) => {
+        // 5. NHẢ CHUỘT/NHẢ CHẠM (Global)
+        function handleDragEnd(e) {
             let stateChanged = false; // Cờ theo dõi
             let actionContext = null; // Theo dõi hành động
             
+            // SỬA: Lấy sự kiện kết thúc (chuột hoặc chạm)
+            const endEvent = e.changedTouches ? e.changedTouches[0] : e;
+
             const dropZoneRect = dropZone.getBoundingClientRect();
             const toolBoxRect = toolBox.getBoundingClientRect();
 
-            const isOverDropZone = e.clientX >= dropZoneRect.left && e.clientX <= dropZoneRect.right &&
-                                 e.clientY >= dropZoneRect.top && e.clientY <= dropZoneRect.bottom;
+            const isOverDropZone = endEvent.clientX >= dropZoneRect.left && endEvent.clientX <= dropZoneRect.right &&
+                                 endEvent.clientY >= dropZoneRect.top && endEvent.clientY <= dropZoneRect.bottom;
             
-            const isOverToolBox = e.clientX >= toolBoxRect.left && e.clientX <= toolBoxRect.right &&
-                                e.clientY >= toolBoxRect.top && e.clientY <= toolBoxRect.bottom;
+            const isOverToolBox = endEvent.clientX >= toolBoxRect.left && endEvent.clientX <= toolBoxRect.right &&
+                                endEvent.clientY >= toolBoxRect.top && endEvent.clientY <= toolBoxRect.bottom;
 
             // TRƯỜNG HỢP 1: KẾT THÚC NỐI DÂY
             if (isWiringMode && wiringStartItem) {
-                const endItem = e.target.closest('.cloned-item');
+                 // SỬA: Lấy mục tiêu từ tọa độ chạm
+                const endTarget = document.elementFromPoint(endEvent.clientX, endEvent.clientY);
+                const endItem = endTarget ? endTarget.closest('.cloned-item') : null;
+                
                 const startType = wiringStartItem.dataset.tool;
                 const endType = endItem ? endItem.dataset.tool : null;
                 let explanation = "";
@@ -2158,7 +2179,12 @@
                 let explanation = "";
                 
                 if (isOverDropZone && isDragging) { // Chỉ thả nếu thực sự kéo
-                    const mousePos = getMousePos(e);
+                    // SỬA: Lấy vị trí chuột/chạm bằng tọa độ cuối cùng
+                    const rect = dropZone.getBoundingClientRect();
+                    const mousePos = {
+                        x: endEvent.clientX - rect.left,
+                        y: endEvent.clientY - rect.top
+                    };
                     
                     let x = mousePos.x - offsetX;
                     let y = mousePos.y - offsetY;
@@ -2309,6 +2335,20 @@
         resetButton.addEventListener('click', resetSimulation);
         undoButton.addEventListener('click', undo);
 
+        // === THÊM MỚI: GẮN EVENT HANDLERS ===
+        // Chuột
+        toolBox.addEventListener('mousedown', handleToolboxStart);
+        dropZone.addEventListener('mousedown', handleDropZoneStart);
+        document.addEventListener('mousemove', handleDragMove);
+        document.addEventListener('mouseup', handleDragEnd);
+
+        // Chạm (Touch)
+        // { passive: false } là quan trọng để cho phép e.preventDefault() và ngăn cuộn trang
+        toolBox.addEventListener('touchstart', handleToolboxStart, { passive: false });
+        dropZone.addEventListener('touchstart', handleDropZoneStart, { passive: false });
+        document.addEventListener('touchmove', handleDragMove, { passive: false });
+        document.addEventListener('touchend', handleDragEnd);
+
         
         // KHỞI CHẠY MÔ PHỎNG LẦN ĐẦU
         updateAllSimulationStates();
@@ -2325,5 +2365,4 @@
     </script>
 </body>
 </html>
-
 
